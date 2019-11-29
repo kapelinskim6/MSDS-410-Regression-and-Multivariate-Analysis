@@ -1,0 +1,240 @@
+-*- R -*-
+# Mike Kapelinski
+# Predict 410
+# Assignment #3
+
+library(Hmisc)
+library(car)
+require(ggplot2)
+require(moments)
+require(stats)
+library(Hmisc)
+library(car)
+
+# Read (or reload) the .RData object as an R data frame
+sample.df <- readRDS('C:\\Users\\mike\\Desktop\\Predict_410\\ames_sample.Rdata');
+
+# Technically we should perform our EDA on the training data set
+train.df <- subset(sample.df,train==1);
+
+# Check the counts on the train/test split
+table(sample.df$train)
+
+# Check the train/test split as a percentage of whole
+table(sample.df$train)/dim(sample.df)[1]
+
+str(sample.df)
+
+par(mfrow = c(1,2))
+hist(eligible.population$SalePrice/1000, main="Histogram of Sale Price", xlab="Sale Price(000s)", col="Blue")
+boxplot(eligible.population$SalePrice/1000, main="Boxplot of Sale Price", ylab="Sale Price(000s)", col="Blue")
+
+plot(eligible.population$Frontage, eligible.population$SalePrice/1000, xlab="Lot Frontage", ylab="Sale Price (000s)",
+     main="Scatterplot of TotalBsmtSF vs Sale Price", col="darkgreen")
+abline(lm(eligible.population$SalePrice/1000 ~ eligible.population$TotalBsmtSF), col = "red",
+       lwd =2, lty = 2)
+lines(lowess(eligible.population$TotalBsmtSF, eligible.population$SalePrice/1000),
+      col = "blue", lwd = 2, lty = 1)
+
+
+plot(train.df$TotalSqftCalc, train.df$SalePrice/1000, xlab="TotalSqftCalc", ylab="Sale Price (000s)",
+     main="Scatterplot TotalSqftCalc vs Sale Price", col="darkgreen")
+abline(lm(train.df$SalePrice/1000 ~ train.df$TotalSqftCalc), col = "red",
+       lwd =2, lty = 2)
+lines(lowess(train.df$TotalSqftCalc, train.df$SalePrice/1000),
+      col = "blue", lwd = 2, lty = 1)
+
+plot(train.df$TotalBsmtSF, train.df$SalePrice/1000, xlab="TotalBsmtSF", ylab="Sale Price (000s)",
+     main="Scatterplot TotalBsmtSF vs Sale Price", col="darkgreen")
+abline(lm(train.df$SalePrice/1000 ~ train.df$TotalBsmtSF), col = "red",
+       lwd =2, lty = 2)
+lines(lowess(train.df$TotalBsmtSF, train.df$SalePrice/1000),
+      col = "blue", lwd = 2, lty = 1)
+
+
+cor(train.df$SalePrice, train.df$TotalSqftCalc, method="pearson")
+cor(train.df$SalePrice, train.df$GrLivArea, method="pearson")
+cor(train.df$SalePrice, train.df$GarageArea, method="pearson")
+cor(train.df$SalePrice, train.df$OverallQual, method="pearson")
+cor(train.df$SalePrice, train.df$TotRmsAbvGrd, method="pearson")
+cor(train.df$SalePrice, train.df$YearBuilt, method="pearson")
+cor(train.df$SalePrice, train.df$TotalBathCalc, method="pearson")
+cor(train.df$SalePrice, train.df$LotArea, method="pearson")
+cor(train.df$SalePrice, train.df$LotFrontage, method="pearson")
+cor(train.df$SalePrice, train.df$TotalBsmtSF, method='pearson')
+cor(train.df$SalePrice, train.df$QualityIndex, method='pearson')
+
+par(mfrow=c(1,3))
+boxplot(eligible.population$SalePrice/1000 ~ eligible.population$FullBath, ylab="Sale Price (000s)", 
+        xlab="Number of  Full Baths", col="red")
+boxplot(eligible.population$SalePrice/1000 ~ eligible.population$HalfBath, ylab="Sale Price (000s)", 
+        xlab="Number of  half Baths", col="red")
+boxplot(eligible.population$SalePrice/1000 ~ eligible.population$BedroomAbvGr, ylab="Sale Price (000s)", 
+        xlab="Rooms Above Grade", col="red")
+
+model.1 = lm(SalePrice ~ GrLivArea, data=train.df)
+summary(model.1)
+
+par(mfrow=c(1,2))
+plot(train.df$GrLivArea, model.1$residuals/1000, xlab="GrLivArea",
+     ylab="Residuals", col="darkblue",title('Residuals vs Predictor'))
+
+qqnorm(model.1$residuals, col="darkred", main="Q-Q Plot Model 1")
+qqline(model.1$residuals)
+
+garage= train.df$GarageArea > 0
+
+model.2 = lm(SalePrice ~ Grage, data=train.df)
+summary(model.2)
+
+par(mfrow=c(1,2))
+plot(train.df$GarageArea, model.2$residuals/1000, xlab="GarageArea",
+     ylab="Residuals", col="darkblue",title('Residuals vs Predictor'))
+
+qqnorm(model.2$residuals, col="darkred", main="Q-Q Plot Model 2")
+qqline(model.2$residuals)
+
+anova(model.1)
+
+model.3 = lm(SalePrice ~ GrLivArea + GarageArea, data=train.df)
+summary(model.3)
+describe(train.df$Neighborhood)
+table(train.df$Neighborhood)
+train.df$
+
+plot( train.df$GarageArea + train.df$GrLivArea, train.df$SalePrice/1000, xlab="GrLivArea + GarageArea", ylab="Sale Price (000s)", 
+     main=" SalePrice ~ GrLivArea + GarageArea", col="darkblue")
+abline(lm(train.df$SalePrice/1000 ~ train.df$GrLivArea + train.df$GarageArea), col = "red",
+       lwd =2, lty = 2)
+lines(lowess(train.df$GrLivArea + train.df$GarageArea, train.df$SalePrice/1000),
+      col = "green", lwd = 2, lty = 1)
+
+summary(train.df$GrLivArea)
+summary(train.df$GarageArea)
+describe(train.df$GarageArea)
+
+par(mfrow=c(1,2))
+plot(train.df$GrLivArea + train.df$GarageArea, model.3$residuals/1000, xlab="GrLivArea + GarageArea",
+     ylab="Residuals", col="darkblue",title('Residuals vs Predictor'))
+
+qqnorm(model.3$residuals, col="darkred", main="Q-Q Plot Model 3")
+qqline(model.3$residuals)
+
+
+boxplot(model.3$residuals ~ train.df$Neighborhood, , col="red", main='Boxplot of Residuals by Neighborhood', las=2)
+
+AvgSalePrice = aggregate(train.df$SalePrice, by=list(Neighborhood=train.df$Neighborhood), FUN=mean)
+colnames(AvgSalePrice) = c('Neighborhood', 'AvgSalePrice')
+
+Resid_abs = abs(model.3$residuals)
+
+Neighborhood_MAE = aggregate(Resid_abs, by=list(Neighborhood=train.df$Neighborhood), FUN=mean)
+colnames(Neighborhood_MAE) = c('Neighborhood', 'MAE')
+
+Price_SF = aggregate(train.df$SalePrice/train.df$TotalSqftCalc, by=list(Neighborhood=train.df$Neighborhood), FUN=mean)
+colnames(Price_SF) = c('Neighborhood', 'Price_per_SF')
+
+train.df$Price_SFALL = (train.df$SalePrice/train.df$TotalSqftCalc) 
+
+plot(Price_SF$Price_per_SF, Neighborhood_MAE$MAE, col="darkblue", xlab="Price Per SF", ylab="MAE", main= "MAE vs Price/Sqft")
+
+train.df$Sqft1 <- ifelse(Price_SFALL < 75,1,0);
+train.df$Sqft2 <- ifelse(Price_SFALL > 75 & Price_SFALL < 90, 1,0);
+train.df$Sqft3 <- ifelse(Price_SFALL > 90 & Price_SFALL < 120,1,0);
+train.df$Sqft4 <- ifelse(Price_SFALL > 120 & Price_SFALL < 150,1,0);
+train.df$Sqft5 <- ifelse(Price_SFALL > 150,1,0);
+
+table(train.df$Price_SFALL)
+table(train.df$Sqft1)
+table(train.df$Sqft2)
+table(train.df$Sqft3)
+table(train.df$Sqft4)
+table(train.df$Sqft5)
+
+model.4 = lm(SalePrice ~ GrLivArea + GarageArea + Sqft1 + Sqft2  + Sqft3 + Sqft4, data=train.df)
+summary(model.4)
+
+mae.3 <- mean(abs(model.3$residuals))
+mae.4 <- mean(abs(model.4$residuals))
+
+mae.3/mae.4
+
+L_salePrice = log(train.df$SalePrice)
+
+
+model.5 = lm(SalePrice ~ GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt, data=train.df)
+summary(model.5)
+
+plot(train.df$GrLivArea + train.df$GarageArea  + train.df$TotalSqftCalc + train.df$QualityIndex+ train.df$YearBuilt, train.df$SalePrice/1000, 
+     xlab="GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt", ylab="Sale Price (000s)", 
+      col="darkblue")
+abline(model.5)
+lines(lowess(train.df$GrLivArea + train.df$GarageArea  + train.df$TotalSqftCalc + train.df$QualityIndex + train.df$YearBuilt, train.df$SalePrice/1000),
+      col = "green", lwd = 2, lty = 1)
+plot(model.5)
+mae.5 = mean(abs(model.5$residuals))
+mse.5 = mean(model.5$residuals^2)
+
+par(mfrow=c(1,2))
+plot(train.df$GrLivArea + train.df$GarageArea  + train.df$TotalSqftCalc + train.df$QualityIndex + train.df$YearBuilt, model.5$residuals/1000, 
+     xlab="GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt",
+     ylab="Residuals", col="darkblue",title('Residuals vs Predictor'))
+
+qqnorm(model.5$residuals, col="darkred", main="Q-Q Plot Model 5")
+qqline(model.5$residuals)
+
+model.6 = lm(L_salePrice ~ GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt, data=train.df)
+summary(model.6)
+
+plot(train.df$GrLivArea + train.df$GarageArea  + train.df$TotalSqftCalc + train.df$QualityIndex+ train.df$YearBuilt, L_salePrice, 
+     xlab="GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt", ylab="Log Sale Price", 
+     col="darkblue")
+lines(lowess(train.df$GrLivArea + train.df$GarageArea  + train.df$TotalSqftCalc + train.df$QualityIndex + train.df$YearBuilt, L_SalePrice),
+      col = "green", lwd = 2, lty = 1)
+
+
+par(mfrow=c(1,2))
+plot(train.df$GrLivArea + train.df$GarageArea  + train.df$TotalSqftCalc + train.df$QualityIndex+ train.df$YearBuilt, model.6$residuals, 
+     xlab="GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt",
+     ylab="Residuals", col="darkblue",title('Residuals vs Predictor'))
+
+qqnorm(model.6$residuals, col="darkred", main="Q-Q Plot Model 6")
+qqline(model.6$residuals)
+
+mae.5 = mean(abs(model.5$residuals))
+mse.5 = mean(model.5$residuals^2)
+
+
+mae.6 = mean(abs(train.df$SalePrice-exp(model.8$fitted.values))) 
+mse.6 = mean((train.df$SalePrice-exp(model.8$fitted.values))^2) 
+
+mse.6/mse.5
+
+mae.5/mae.6
+
+log_Total = log(train.df$TotalSqftCalc)
+
+model.7 = lm(salePrice ~ GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt, data=train.df)
+summary(model.7)
+
+model.7 = (lm(, train.df$SalePrice))
+plot( log(train.df$QualityIndex, train.df$SalePrice))
+
+l_lot= log(train.df$LotArea)
+l_garage = log(train.df$GarageArea)
+l_total = log(train.df$TotalSqftCalc)
+l_year = log(train.df$YearBuilt)
+
+model.8 = lm(train.df$SalePrice ~ + l_total + l_lot + train.df$YearBuilt )
+summary(model.8)
+
+model.9 = lm(train.df$SalePrice ~ + train.df$TotalSqftCalc +train.df$LotArea + train.df$YearBuilt )
+summary(model.9)
+
+par(mfrow=c(1,2))
+plot(train.df$TotalSqftCalc +train.df$LotArea + train.df$YearBuilt, model.9$residuals, 
+     xlab="GrLivArea + GarageArea  + TotalSqftCalc + QualityIndex  + YearBuilt",
+     ylab="Residuals", col="darkblue",title('Residuals vs Predictor'))
+
+qqnorm(model.9$residuals, col="darkred", main="Q-Q Plot Model 6")
+qqline(model.9$residuals)
