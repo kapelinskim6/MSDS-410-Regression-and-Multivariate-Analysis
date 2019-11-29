@@ -1,0 +1,317 @@
+-*- R -*-
+# Mike Kapelinski
+# Predict 410
+# Assignment #5
+
+
+require(moments)
+require(stats)
+library(Hmisc)
+library(car)
+library(MASS)
+
+path.name <- 'C:\\Users\\mike\\Desktop\\Predict_410\\';
+
+# Read in csv file for Ames housing data;
+file.name <- paste(path.name,'ames_housing_data.csv',sep='');
+
+# Create a Dataframe ames.df
+ames.df <- read.csv(file.name,header=TRUE,stringsAsFactors=FALSE);
+
+# Show the head of the data frame;
+head(ames.df)
+
+# Print entire DF as a string
+str(ames.df)
+
+
+# Create a waterfall of drop conditions;
+ames.df$dropCondition <- ifelse(ames.df$BldgType!='1Fam','01: Not SFR',
+                         ifelse(ames.df$SaleCondition!='Normal','02: Non-Normal Sale',
+                         ifelse(ames.df$Street!='Pave','03: Street Not Paved',
+                         ifelse(ames.df$YearBuilt <1950,'04: Built Pre-1950',
+                         ifelse(ames.df$TotalBsmtSF <1,'05: No Basement',
+                         ifelse(ames.df$GrLivArea <800,'06: LT 800 SqFt',
+                         ifelse(ames.df$LotArea >70000,'07: GT 70000 SqFt',
+                         ifelse(ames.df$TotRmsAbvGrd >11,'08: GT 11 Rooms Total',
+                         ifelse(ames.df$FullBath <1,'09: GT 0 Bathroom',  
+                         ifelse(ames.df$GrLivArea >3000,'10: Above Lvng Area LT 3000',
+                         '99: Eligible Sample' ))))))))));
+
+
+# Save the table
+waterfall <- table(ames.df$dropCondition);
+
+# Format the table as a column matrix for presentation;
+as.matrix(waterfall,10,1)
+
+
+# Eliminate all observations that are not part of the eligible sample population;
+eligible.population <- subset(ames.df,dropCondition=='99: Eligible Sample');
+
+# Check that all remaining observations are eligible;
+table(eligible.population$dropCondition);
+
+
+
+
+sample.df= eligible.population
+
+
+str(sample.df)
+
+# Define total square footage
+sample.df$TotalSqftCalc <- sample.df$BsmtFinSF1+sample.df$BsmtFinSF2+sample.df$GrLivArea;
+
+# Define total bathrooms
+sample.df$TotalBathCalc <- sample.df$BsmtFullBath + 0.5*sample.df$BsmtHalfBath ++
+  + sample.df$FullBath + 0.5*sample.df$HalfBath;
+
+
+# Corner lot indicator
+# ifelse(condition,valueTrue,valueFalse)
+sample.df$CornerLotInd <- ifelse(sample.df$LotConfig=='Corner',1,0);
+
+# Check how the indicator is assigned
+table(sample.df$CornerLotInd,sample.df$LotConfig)
+
+# Define two indicators for fire places
+table(sample.df$Fireplaces)
+
+# Intercept Adjustment for a single fireplace
+sample.df$FireplaceInd1 <- ifelse((sample.df$Fireplaces>0)&(sample.df$Fireplaces<2),1,0);
+table(sample.df$FireplaceInd1,sample.df$Fireplaces)
+
+# Intercept Adjustment for 2 or more fireplaces
+sample.df$FireplaceInd2 <- ifelse((sample.df$Fireplaces>1),1,0);
+table(sample.df$FireplaceInd2,sample.df$Fireplaces)
+
+# Additive Intercept Adjustment for a single fireplace
+sample.df$FireplaceAdder1 <- ifelse((sample.df$Fireplaces>0),1,0);
+
+# Additive Intercept Adjustment for 2 or more fireplaces
+sample.df$FireplaceAdder2 <- ifelse((sample.df$Fireplaces>1),1,0);
+
+table(sample.df$FireplaceAdder1,sample.df$Fireplaces)
+table(sample.df$FireplaceAdder2,sample.df$Fireplaces)
+
+
+
+# Central Air Indicator
+sample.df$CentralAirInd <- ifelse(sample.df$CentralAir=='Y',1,0);
+table(sample.df$CentralAirInd) 
+# Looks like this is not useful since almost all homes have central air
+
+
+# Exterior Siding Type
+sample.df$BrickInd <- ifelse(sample.df$Exterior1=='BrkFace',1,0);
+sample.df$VinylSidingInd <- ifelse(sample.df$Exterior1=='VinylSd',1,0);
+
+# Pool Indicator
+sample.df$PoolInd <- ifelse(sample.df$PoolArea>0,1,0);
+
+# Wood Deck Indicator
+sample.df$WoodDeckInd <- ifelse(sample.df$WoodDeckSF>0,1,0);
+
+# Porch Indicator - Open Porch OR Screen Porch
+sample.df$PorchInd <- ifelse((sample.df$OpenPorchSF>0)||(sample.df$ScreenPorch>0),1,0);
+
+# Quality Index
+sample.df$QualityIndex <- sample.df$OverallQual*sample.df$OverallCond;
+
+table(sample.df$QualityIndex)
+
+
+# Year Sold Indicators
+sample.df$I2006 <- ifelse(sample.df$YrSold==2006,1,0);
+sample.df$I2007 <- ifelse(sample.df$YrSold==2007,1,0);
+sample.df$I2008 <- ifelse(sample.df$YrSold==2008,1,0);
+sample.df$I2009 <- ifelse(sample.df$YrSold==2009,1,0);
+sample.df$I2010 <- ifelse(sample.df$YrSold==2010,1,0);
+
+table(sample.df$YrSold)
+table(sample.df$I2006)
+table(sample.df$I2007)
+table(sample.df$I2008)
+table(sample.df$I2009)
+table(sample.df$I2010)
+
+
+# List out sample.df
+str(sample.df)
+
+
+# Save the R data frame as an .RData object
+saveRDS(sample.df,file='C:\\Users\\mike\\Desktop\\Predict_410\\ames_sample.RData');
+
+# Read (or reload) the .RData object as an R data frame
+my.data <- readRDS('C:\\Users\\mike\\Desktop\\Predict_410\\ames_sample.Rdata');
+
+str(my.data)
+
+#set seed on the random number generator for consistent split
+set.seed(123)
+my.data$u =runif(n=dim(my.data) [1], min=0, max=1);
+
+#create train/test split
+train.df = subset(my.data, u < 0.70 );
+test.df = subset(my.data, u >= 0.70 );
+
+# check data split 
+dim(my.data)[1]
+dim(train.df)[1]
+dim(train.df)[1]/dim(my.data)[1]
+dim(test.df)[1]
+dim(test.df)[1]/dim(my.data)[1]
+
+dim(train.df)[1] + dim(test.df)[1]
+
+keep.list <-  list('SalePrice', 'QualityIndex','TotalSqftCalc','I2008','I2007','I2006','I2010','I2009', 'TotalBathCalc','GarageArea','TotRmsAbvGrd',
+              'BedroomAbvGr','CornerLotInd','TotalBsmtSF','PorchInd', 'FireplaceInd1', 'FireplaceInd2', 'CentralairInd', 'PoolInd',
+              'MasVnrArea', 'LotArea','CentralAirInd')
+
+train.clean1 <-train.df[, (names(my.data) %in% keep.list)];
+
+str(train.clean1)
+
+train.clean = na.omit(train.clean1);
+
+str(train.clean)
+
+# Define the upper model as the FULL model
+upper.lm <- lm(SalePrice ~ .,data=train.clean);
+summary(upper.lm)
+
+# Define the lower model as the Intercept model
+lower.lm <- lm(SalePrice ~ 1,data=train.clean);
+
+# Need a SLR to initialize stepwise selection
+sqft.lm <- lm(SalePrice ~ TotalSqftCalc,data=train.clean);
+summary(sqft.lm)
+
+
+# load MASS library 
+library(MASS)
+
+# Call stepAIC() for variable selection
+forward.lm <- stepAIC(object=lower.lm,scope=list(upper=formula(upper.lm),lower=~1),
+                      direction=c('forward'));
+summary(forward.lm)
+
+backward.lm <- stepAIC(object=upper.lm,direction=c('backward'));
+summary(backward.lm)
+
+stepwise.lm <- stepAIC(object=sqft.lm,scope=list(upper=formula(upper.lm),lower=~1),
+                       direction=c('both'));
+summary(stepwise.lm)
+
+junk.lm <- lm(SalePrice ~ OverallQual + OverallCond + QualityIndex + GrLivArea + TotalSqftCalc, data=train.df)
+summary(junk.lm)
+
+# Compute the VIF values
+library(car)
+sort(vif(forward.lm),decreasing=TRUE)
+sort(vif(backward.lm),decreasing=TRUE)
+sort(vif(stepwise.lm),decreasing=TRUE)
+sort(vif(junk.lm),decreasing=TRUE)
+
+AIC(forward.lm, k=2)
+AIC(backward.lm, k=2)
+AIC(stepwise.lm, k=2)
+AIC(junk.lm, k=2)
+
+BIC(forward.lm)
+BIC(backward.lm)
+BIC(stepwise.lm)
+BIC(junk.lm)
+
+mse.1 <- mean(model.1$residuals^2)
+mae.1 <- mean(abs(model.1$residuals))
+# Mae and Mse calculations 
+mean(abs(forward.lm$residuals))
+mean(forward.lm$residuals^2)
+
+mean(abs(backward.lm$residuals))
+mean(backward.lm$residuals^2)
+
+mean(abs(stepwise.lm$residuals))
+mean(stepwise.lm$residuals^2)
+
+mean(abs(junk.lm$residuals))
+mean(junk.lm$residuals^2)
+
+forward.test = predict(forward.lm, newdata = test.df)
+summary(forward.test)
+
+junk.test1 = predict(junk.lm, newdata = test.df)
+summary(junk.test)
+junk.test = na.omit(junk.test1);
+
+keep.list <-  list('SalePrice', 'QualityIndex','TotalSqftCalc','I2008','I2007','I2006','I2010','I2009', 'TotalBathCalc','GarageArea','TotRmsAbvGrd',
+                   'BedroomAbvGr','CornerLotInd','TotalBsmtSF','PorchInd', 'FireplaceInd1', 'FireplaceInd2', 'CentralairInd', 'PoolInd',
+                   'MasVnrArea', 'LotArea','CentralAirInd')
+
+test.clean1 <-test.df[, (names(my.data) %in% keep.list)];
+test.clean = na.omit(test.clean1);
+str(test.clean)
+
+error = forward.test - test.clean$SalePrice
+junk_error = junk.test - test.df$SalePrice
+
+str(error)
+summary(error)
+summary(junk_error)
+
+mean(abs(error))
+mean(error^2)
+
+mean(abs(junk_error))
+mean(junk_error^2)
+
+
+
+# Training Data
+# Abs Pct Error
+forward.pct <- abs(forward.lm$residuals)/train.clean$SalePrice;
+junk.pct <- abs(junk.lm$residuals)/train.clean1$SalePrice;
+
+# Assign Prediction Grades;
+forward.PredictionGrade <- ifelse(forward.pct<=0.10,'Grade 1: [0.0.10]',
+                                  ifelse(forward.pct<=0.15,'Grade 2: (0.10,0.15]',
+                                         ifelse(forward.pct<=0.25,'Grade 3: (0.15,0.25]',
+                                                'Grade 4: (0.25+]')))
+forward.trainTable <- table(forward.PredictionGrade)
+forward.trainTable/sum(forward.trainTable)
+
+junk.PredictionGrade <- ifelse(junk.pct<=0.10,'Grade 1: [0.0.10]',
+                                  ifelse(junk.pct<=0.15,'Grade 2: (0.10,0.15]',
+                                         ifelse(junk.pct<=0.25,'Grade 3: (0.15,0.25]',
+                                                'Grade 4: (0.25+]')))
+junk.trainTable <- table(junk.PredictionGrade)
+junk.trainTable/sum(junk.trainTable)
+# Test Data
+# Abs Pct Error
+forward.testPCT <- abs(test.df$SalePrice-forward.test)/test.df$SalePrice;
+
+junk.testPCT <- abs(test.df$SalePrice-junk.test)/test.df$SalePrice;
+
+# Assign Prediction Grades;
+forward.testPredictionGrade <- ifelse(forward.testPCT<=0.10,'Grade 1: [0.0.10]',
+                                      ifelse(forward.testPCT<=0.15,'Grade 2: (0.10,0.15]',
+                                             ifelse(forward.testPCT<=0.25,'Grade 3: (0.15,0.25]',
+                                                    'Grade 4: (0.25+]')))
+
+forward.testTable <-table(forward.testPredictionGrade)
+forward.testTable/sum(forward.testTable)
+
+junk.testPredictionGrade <- ifelse(junk.testPCT<=0.10,'Grade 1: [0.0.10]',
+                                      ifelse(junk.testPCT<=0.15,'Grade 2: (0.10,0.15]',
+                                             ifelse(junk.testPCT<=0.25,'Grade 3: (0.15,0.25]',
+                                                    'Grade 4: (0.25+]')))
+junk.testTable <-table(junk.testPredictionGrade)
+junk.testTable/sum(junk.testTable)
+
+
+cor(test.clean$TotRmsAbvGrd, test.clean$TotalSqftCalc, method="pearson")
+cor(train.df$SalePrice, train.df$TotalSqftCalc, method="pearson")
+cor(train.df$QualityIndex, train.df$OverallCond, method="pearson")
