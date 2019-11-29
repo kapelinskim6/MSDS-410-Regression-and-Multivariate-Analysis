@@ -1,0 +1,120 @@
+-*- R -*-
+# Mike Kapelinski
+# Predict 410
+# Assignment #4
+
+
+Model 1: Let’s consider the following SAS output for a regression model which we will refer to as Model 1. 
+
+               Analysis of Variance 
+Source DF Sum of Squares Mean Square F Value Pr > F 
+Model 4 2126.00904 531.50226 <.0001 
+Error 67 630.35953 9.40835
+Corrected Total 71 2756.36857
+
+Root MSE 3.06730 R-Square 
+Dependent Mean 37.26901 Adj R-Sq 
+Coeff Var 8.23017
+
+
+              Parameter Estimates 
+Variable DF Parameter Estimate Standard Error t Value Pr > |t| Intercept 
+1 11.33027 1.99409 5.68 <.0001 
+X1 1 2.18604 0.41043 <.0001 
+X2 1 8.27430 2.33906 3.54 0.0007 
+X3 1 0.49182 0.26473 1.86 0.0676 
+X4 1 -0.49356 2.29431 -0.22 0.8303
+
+Number in Model C(p) R-Square AIC BIC Variables in Model 
+        4   5.0000  0.7713 166.2129 168.9481   X1 X2 X3 X4
+
+#(5 points) How many observations are in the sample data? (Hint: The answer needs to be computed. It is not simply a value listed on this page.)
+The number of observations is 72. We use the Corrected Total + 1 to determine the number of observations. The one degree of freedom is used for the intercept parameter.
+
+#(5 points) Write out the null and alternate hypotheses for the t-test for Beta1.
+H0 : 𝛽1=0 , H1 : 𝛽1≠0
+
+#(5 points) Compute the t- statistic for Beta1.
+t0 = 𝛽1̂𝑠𝑒(𝛽1̂) = 2.186040.41043 = 5.3262
+
+#(5 points) Compute the R-Squared value for Model 1.
+R2 = 𝑆𝑆𝑅𝑆𝑆𝑇= 1 −𝑆𝑆𝐸𝑆𝑆𝑇 = 1- 630.359532756.36857 = 0.7713
+
+#(5 points) Compute the Adjusted R-Squared value for Model 1.
+R2ADJ = 1 - SSE = 1 - SSE = 1- 630.35953 = 0.7576
+(n−k−1) (n−p) (72-5)
+SST SST 2756.36857
+(n−1) (n−1) (72-1)
+
+#(5 points) Write out the null and alternate hypotheses for the Overall F-test.
+H0 : 𝛽1=...=𝛽𝑘=0 vs. H1 : 𝛽𝑖≠0
+
+#(5 points) Compute the F-statistic for the Overall F-test.
+F0 = 𝑆𝑆𝑅𝑘𝑆𝑆𝐸(𝑛−𝑝) = F0 = 2126.009044630.35953(72−5) = 56.4926
+
+
+Model 2: Now let’s consider the following SAS output for an alternate regression model which we will refer to as Model 2.
+Analysis of Variance 
+Source DF Sum of Squares Mean Square F Value Pr > F 
+Model 6 2183.75946 363.95991 41.32 <.0001 
+Error 65 572.60911 8.80937 
+Corrected Total 71 2756.36857
+
+Root MSE 2.96806 R-Square 0.7923 
+Dependent Mean 37.26901 Adj R-Sq 0.7731 
+Coeff Var 7.96388
+
+Parameter Estimates 
+Variable DF Parameter Estimate Standard Error t Value Pr > |t| 
+Intercept 1 14.39017 2.89157 4.98 <.0001 
+X1 1 1.97132 0.43653 4.52 <.0001 
+X2 1 9.13895 2.30071 3.97 0.0002 
+X3 1 0.56485 0.26266 2.15 0.0352 
+X4 1 0.33371 2.42131 0.14 0.8908 
+X5 1 1.90698 0.76459 2.49 0.0152 
+X6 1 -1.04330 0.64759 -1.61 0.1120
+
+Number in Model C(p) R-Square AIC BIC Variables in Model 
+          6 7.0000 0.7923 163.2947 166.7792 X1 X2 X3 X4 X5 X6
+
+#(5 points) Now let’s consider Model 1 and Model 2 as a pair of models. Does Model 1 nest Model 2 or does Model 2 nest Model 1? Explain.
+The predictor variables in Model 1 are a subset of Model 2. So we can say that Model 1 (reduced model) is nested by model 2 (full model).
+
+#(5 points) Write out the null and alternate hypotheses for a nested F-test using Model 1 and Model 2
+H0: 𝛽1=𝛽2=...=𝛽6=0 vs. H1: 𝛽𝑖≠0
+
+#(5 points) Compute the F-statistic for a nested F-test using Model 1 and Model 2.
+F0 = [𝑆𝑆𝐸(𝑅𝑀)−𝑆𝑆𝐸(𝐹𝑀)](dim(𝐹𝑀)−dim(𝑅𝑀))𝑆𝑆𝐸(𝐹𝑀)[𝑛−dim(𝐹𝑀)] = F0 = [630.35953−572.60911](7−5)572.60911[72−7] = 3.2777
+Here are some additional questions to help you understand other parts of the SAS output.
+
+#(0 points) Compute the AIC values for both Model 1 and Model 2.
+AIC = n * ln (RSSn) + 2p
+Model 1 = 72 * ln ( 630.3595372) + 2*5 = 166.2129
+Model 2 = 72 * ln ( 572.6091172) + 2*7 = 163.2946
+
+#(0 points) Compute the BIC values for both Model 1 and Model 2. (Hint: Compute the BIC using the Schwarz BIC formula. Why does this value differ from the SAS value? What formula does SAS use?)
+ BIC = n * ln (RSSn) + p * ln(n)
+ Model 1 = 72 * ln ( 630.3595372) + 5 * ln (72) = 177.5962
+ Model 2 = 72 * ln ( 572.6091172) + 7 * ln (72) = 179.2313
+SAS calculates the BIC using the Sawa calculation for BIC whereas the above values where calculated using the Schwarz SBC formula.
+
+#(0 points) Compute the Mallow’s Cp values for both Model 1 and Model 2. (Hint: This is a trick question. Do these values make sense? Why might they not make sense? Consult your LRA book.)
+𝐶𝑝= 𝑆𝑆𝑅𝑝 𝑀𝑆𝐸 – n + 2 * p
+𝑀𝑜𝑑𝑒𝑙 1= 𝐶𝑝 = 630.359539.40835 -72 + 2 * 5 = 5.0000
+𝑀𝑜𝑑𝑒𝑙 2= 𝐶𝑝 = 572.609118.80937 -72 + 2 * 7 = 7.0000
+
+#(0 points) Verify the t-statistics for the remaining coefficients in Model 1.
+tintercept = 11.330271.99409 = 5.6819
+tx2 = 8.274302.33906 = 3.5374
+tx3 = 0.491820.26473 = 1.8578
+tx4 = −0.493562.29431 = -0.2151
+
+#(0 points) Verify the Mean Square values for Model 1 and Model 2.
+MSE = 𝑆𝑆𝐸𝑑𝑓
+ Model 1 =630.3595367 = 9.4083
+ Model 2 = 572.6091165= 8.8093
+
+#(0 points) Verify the Root MSE values for Model 1 and Model 2.
+RMSE = √𝑀𝑆𝐸
+ Model 1 = √9.40835= 3.0673
+ Model 2 = √8.80937= 2.9680
