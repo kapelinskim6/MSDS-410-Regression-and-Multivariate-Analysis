@@ -54,6 +54,7 @@ F0 = 𝑆𝑆𝑅𝑘𝑆𝑆𝐸(𝑛−𝑝) = F0 = 2126.009044630.35953(72−
 
 
 Model 2: Now let’s consider the following SAS output for an alternate regression model which we will refer to as Model 2.
+
 Analysis of Variance 
 Source DF Sum of Squares Mean Square F Value Pr > F 
 Model 6 2183.75946 363.95991 41.32 <.0001 
