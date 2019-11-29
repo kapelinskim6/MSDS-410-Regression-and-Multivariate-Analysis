@@ -1,7 +1,7 @@
 -*- R -*-
 # Mike Kapelinski
 # Predict 410
-# Data Analysis Assignment #8
+# Data Analysis Assignment #7
 
 
 require(moments)
